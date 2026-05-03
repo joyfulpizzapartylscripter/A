@@ -1,55 +1,57 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatGPT Popup GUI</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: transparent;
-            overflow: hidden;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChatGPT Popup App</title>
 
-        .chat-box {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 400px;
-            background: rgba(20,20,20,0.95);
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.4);
-        }
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: transparent;
+        overflow: hidden;
+    }
 
-        input {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            outline: none;
-            font-size: 16px;
-        }
+    .chat-box {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 420px;
+        background: rgba(20,20,20,0.95);
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    }
 
-        .popup-response {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.85);
-            color: white;
-            padding: 20px 35px;
-            border-radius: 14px;
-            font-size: 22px;
-            text-align: center;
-            display: none;
-            max-width: 70%;
-            z-index: 999;
-        }
-    </style>
+    input {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 8px;
+        outline: none;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+
+    .popup-response {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0,0,0,0.88);
+        color: white;
+        padding: 22px 35px;
+        border-radius: 14px;
+        font-size: 22px;
+        text-align: center;
+        display: none;
+        max-width: 75%;
+        z-index: 9999;
+        word-wrap: break-word;
+    }
+</style>
 </head>
 <body>
 
@@ -59,7 +61,7 @@
     <input
         id="userInput"
         type="text"
-        placeholder="Type something and press Enter..."
+        placeholder="Type message and press Enter..."
     />
 </div>
 
@@ -68,10 +70,12 @@ const input = document.getElementById("userInput");
 const popup = document.getElementById("popup");
 
 /*
-IMPORTANT:
-Replace this with your own OpenAI API key.
-Never expose real API keys publicly in production.
+PUT YOUR REAL OPENAI API KEY HERE
+
+Example:
+const API_KEY = "sk-xxxxxxxxxxxxxxxxxxxx";
 */
+
 const API_KEY = "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";
 
 async function askChatGPT(message) {
@@ -83,20 +87,28 @@ async function askChatGPT(message) {
                 "Authorization": `Bearer ${API_KEY}`
             },
             body: JSON.stringify({
-                model: "gpt-4o-mini",
+                model: "gpt-3.5-turbo",
                 messages: [
                     {
                         role: "user",
                         content: message
                     }
-                ]
+                ],
+                temperature: 0.7
             })
         });
 
         const data = await response.json();
 
+        console.log("API RESPONSE:", data);
+
+        if (!response.ok) {
+            showPopup(data.error?.message || "API request failed");
+            return;
+        }
+
         if (!data.choices || !data.choices.length) {
-            showPopup("No response received.");
+            showPopup("No response received");
             return;
         }
 
@@ -104,8 +116,8 @@ async function askChatGPT(message) {
         showPopup(reply);
 
     } catch (error) {
-        console.error(error);
-        showPopup("Error connecting to ChatGPT.");
+        console.error("FULL ERROR:", error);
+        showPopup("Error: " + error.message);
     }
 }
 
@@ -118,8 +130,8 @@ function showPopup(text) {
     }, 4000);
 }
 
-input.addEventListener("keypress", function(e) {
-    if (e.key === "Enter") {
+input.addEventListener("keypress", function(event) {
+    if (event.key === "Enter") {
         const message = input.value.trim();
 
         if (!message) return;
